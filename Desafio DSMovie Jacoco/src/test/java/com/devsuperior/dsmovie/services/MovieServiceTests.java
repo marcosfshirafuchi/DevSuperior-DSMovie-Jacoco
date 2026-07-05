@@ -67,6 +67,10 @@ public class MovieServiceTests {
 
 		//Esse mock é do teste public void insertShouldReturnMovieDTO()
 		Mockito.lenient().when(repository.save(any())).thenReturn(movieEntity);
+
+		//Esse mock é do teste public void updateShouldReturnMovieDTOWhenIdExists()
+		Mockito.lenient().when(repository.getReferenceById(existingMovieId)).thenReturn(movieEntity);
+
 	}
 
 	@Test
@@ -123,6 +127,17 @@ public class MovieServiceTests {
 
 	@Test
 	public void updateShouldReturnMovieDTOWhenIdExists() {
+		//Resultado do método update do service
+		MovieDTO result = service.update(existingMovieId, movieDTO);
+
+		//Verifica se o resultado não é nulo
+		Assertions.assertNotNull(result);
+
+		//Verifica o id do filme
+		Assertions.assertEquals(result.getId(), existingMovieId);
+
+		//Verifica o nome do título do filme
+		Assertions.assertEquals(result.getTitle(), movieDTO.getTitle());
 	}
 
 	@Test
