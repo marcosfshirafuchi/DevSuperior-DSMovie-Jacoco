@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Optional;
@@ -30,19 +31,23 @@ public class UserServiceTests {
 	@Mock
 	private CustomUserUtil userUtil;
 
-	private String existingUsername;
+	private String existingUsername, nonExistingUsername;
 	private UserEntity userEntity;
 
 	@BeforeEach
-	void setUp(){
+	void setUp() throws Exception {
 		//Inicializar as variaveis
 		existingUsername = "maria@gmail.com";
 		//Criar um usuário
-		userEntity =UserFactory.createUserEntity();
+		userEntity = UserFactory.createUserEntity();
+		nonExistingUsername = "user@gmail.com";
 
 		//Mockar os métodos abaixo da classe UserService
 		//Esse mock é do teste public void authenticatedShouldReturnUserEntityWhenUserExists()
 		Mockito.lenient().when(repository.findByUsername(existingUsername)).thenReturn(Optional.of(userEntity));
+
+		//Esse mock é do teste public void authenticatedShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists()
+		Mockito.lenient().when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
 	}
 
 
@@ -61,6 +66,14 @@ public class UserServiceTests {
 
 	@Test
 	public void authenticatedShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists() {
+
+		//Tenta obter o token do username do usuário digitado mas o username não existe
+		Mockito.doThrow(ClassCastException.class).when(userUtil).getLoggedUsername();
+		//Resultado do método authenticated do UserService quando o username não existe
+		Assertions.assertThrows(UsernameNotFoundException.class, ()->{
+			//Verifica o método authenticated da classe UserService quando o username não existe
+			service.authenticated();
+		});
 	}
 
 	@Test
