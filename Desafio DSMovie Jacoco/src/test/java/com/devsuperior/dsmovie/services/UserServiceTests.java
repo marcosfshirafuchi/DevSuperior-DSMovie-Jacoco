@@ -1,7 +1,9 @@
 package com.devsuperior.dsmovie.services;
 
 import com.devsuperior.dsmovie.entities.UserEntity;
+import com.devsuperior.dsmovie.projections.UserDetailsProjection;
 import com.devsuperior.dsmovie.repositories.UserRepository;
+import com.devsuperior.dsmovie.tests.UserDetailsFactory;
 import com.devsuperior.dsmovie.tests.UserFactory;
 import com.devsuperior.dsmovie.utils.CustomUserUtil;
 import org.junit.jupiter.api.Assertions;
@@ -12,9 +14,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.List;
 import java.util.Optional;
 
 
@@ -33,6 +38,7 @@ public class UserServiceTests {
 
 	private String existingUsername, nonExistingUsername;
 	private UserEntity userEntity;
+	private List<UserDetailsProjection> userDetails;
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -41,6 +47,7 @@ public class UserServiceTests {
 		//Criar um usuário
 		userEntity = UserFactory.createUserEntity();
 		nonExistingUsername = "user@gmail.com";
+		userDetails = UserDetailsFactory.createCustomAdminUser(existingUsername);
 
 		//Mockar os métodos abaixo da classe UserService
 		//Esse mock é do teste public void authenticatedShouldReturnUserEntityWhenUserExists()
@@ -48,6 +55,9 @@ public class UserServiceTests {
 
 		//Esse mock é do teste public void authenticatedShouldThrowUsernameNotFoundExceptionWhenUserDoesNotExists()
 		Mockito.lenient().when(repository.findByUsername(nonExistingUsername)).thenReturn(Optional.empty());
+
+		//Esse mock é do teste public void loadUserByUsernameShouldReturnUserDetailsWhenUserExists()
+		Mockito.lenient().when(repository.searchUserAndRolesByUsername(existingUsername)).thenReturn(userDetails);
 	}
 
 
@@ -78,6 +88,13 @@ public class UserServiceTests {
 
 	@Test
 	public void loadUserByUsernameShouldReturnUserDetailsWhenUserExists() {
+		//Resultado do método loadUserByUsername do UserService quando o username existe
+		UserDetails result = service.loadUserByUsername(existingUsername);
+
+		//Verificar se o resultado não é nulo
+		Assertions.assertNotNull(result);
+		//Verifica o username do usuário
+		Assertions.assertEquals(result.getUsername(), existingUsername);
 	}
 
 	@Test
