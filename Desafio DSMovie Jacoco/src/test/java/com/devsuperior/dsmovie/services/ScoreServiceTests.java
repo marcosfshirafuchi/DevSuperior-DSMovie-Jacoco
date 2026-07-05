@@ -7,6 +7,7 @@ import com.devsuperior.dsmovie.entities.ScoreEntity;
 import com.devsuperior.dsmovie.entities.UserEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
 import com.devsuperior.dsmovie.repositories.ScoreRepository;
+import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import com.devsuperior.dsmovie.tests.ScoreFactory;
 import com.devsuperior.dsmovie.tests.UserFactory;
@@ -46,6 +47,7 @@ public class ScoreServiceTests {
     private ScoreEntity scoreEntity;
     private long existingMovieId;
     private String existingTitle;
+    private long nonExistingMovieId;
 
     //Inicializa as variaveis antes de começar os testes
     @BeforeEach
@@ -57,12 +59,16 @@ public class ScoreServiceTests {
         scoreEntity = ScoreFactory.createScoreEntity();
         existingMovieId = 1L;
         existingTitle = "Test Movie";
+        nonExistingMovieId = 2L;
 
         //Mockar os métodos abaixo da classe MovieService
         //Esse mock é do teste public void saveScoreShouldReturnMovieDTO()
         Mockito.lenient().when(movieRepository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
         Mockito.lenient().when(scoreRepository.saveAndFlush(any())).thenReturn(scoreEntity);
         Mockito.lenient().when(movieRepository.save(any())).thenReturn(movieEntity);
+
+        //Esse mock é do teste public void saveScoreShouldThrowResourceNotFoundExceptionWhenNonExistingMovieId()
+        Mockito.lenient().when(movieRepository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
     }
 
     @Test
@@ -96,5 +102,24 @@ public class ScoreServiceTests {
 
     @Test
     public void saveScoreShouldThrowResourceNotFoundExceptionWhenNonExistingMovieId() {
+
+        // Usuário autenticado
+        Mockito.when(userService.authenticated()).thenReturn(userEntity);
+
+        // DTO apontando para um filme inexistente
+        ScoreDTO dto = new ScoreDTO(nonExistingMovieId, 4.0);
+
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> {
+            service.saveScore(dto);
+        });
+
+        // Verifica se tentou buscar o filme inexistente
+        Mockito.verify(movieRepository).findById(nonExistingMovieId);
+
+        // Como o filme não existe, não deve salvar score
+        Mockito.verify(scoreRepository, Mockito.never()).saveAndFlush(any());
+
+        // Nem atualizar o filme
+        Mockito.verify(movieRepository, Mockito.never()).save(any());
     }
 }
