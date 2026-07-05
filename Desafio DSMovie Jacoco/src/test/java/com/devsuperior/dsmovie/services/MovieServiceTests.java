@@ -42,6 +42,7 @@ public class MovieServiceTests {
 	private PageImpl<MovieEntity> page;
 	private long existingMovieId;
 	private long nonExistingMovieId;
+	private MovieDTO movieDTO;
 
 	//Inicializa as variaveis antes de começar os testes
 	@BeforeEach
@@ -52,6 +53,7 @@ public class MovieServiceTests {
 		page = new PageImpl<>(List.of((movieEntity)));
 		existingMovieId = 1L;
 		nonExistingMovieId = 2L;
+		movieDTO = MovieFactory.createMovieDTO();
 
 		//Mockar os métodos abaixo da classe MovieService
 		//Esse mock é do teste public void findAllShouldReturnPagedMovieDTO()
@@ -62,6 +64,9 @@ public class MovieServiceTests {
 
 		//Esse mock é do teste public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist()
 		Mockito.lenient().when(repository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
+
+		//Esse mock é do teste public void insertShouldReturnMovieDTO()
+		Mockito.lenient().when(repository.save(any())).thenReturn(movieEntity);
 	}
 
 	@Test
@@ -106,6 +111,14 @@ public class MovieServiceTests {
 
 	@Test
 	public void insertShouldReturnMovieDTO() {
+		//Resultado do método insert do service
+		MovieDTO result = service.insert(new MovieDTO(movieEntity));
+
+		//Verifica se o resultado não é nulo
+		Assertions.assertNotNull(result);
+
+		//Verifica o id do filme
+		Assertions.assertEquals(result.getId(), movieEntity.getId());
 	}
 
 	@Test
