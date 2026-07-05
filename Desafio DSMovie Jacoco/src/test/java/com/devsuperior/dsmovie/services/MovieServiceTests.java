@@ -74,6 +74,9 @@ public class MovieServiceTests {
 
 		//Esse mock é do teste public void updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist()
 		Mockito.lenient().when(repository.getReferenceById(nonExistingMovieId)).thenThrow(new EntityNotFoundException());
+
+		//Esse mock é do teste public void deleteShouldDoNothingWhenIdExists()
+		Mockito.lenient().when(repository.existsById(existingMovieId)).thenReturn(true);
 	}
 
 	@Test
@@ -154,6 +157,11 @@ public class MovieServiceTests {
 
 	@Test
 	public void deleteShouldDoNothingWhenIdExists() {
+		//Resultado do método delete do service, neste caso não retorna nada
+		Assertions.assertDoesNotThrow(() ->{
+			//Verifica o método delete da classe MovieService quando o id existe
+			service.delete(existingMovieId);
+		});
 	}
 
 	@Test
