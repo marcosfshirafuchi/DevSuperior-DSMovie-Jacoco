@@ -3,6 +3,7 @@ package com.devsuperior.dsmovie.services;
 import com.devsuperior.dsmovie.dto.MovieDTO;
 import com.devsuperior.dsmovie.entities.MovieEntity;
 import com.devsuperior.dsmovie.repositories.MovieRepository;
+import com.devsuperior.dsmovie.services.exceptions.ResourceNotFoundException;
 import com.devsuperior.dsmovie.tests.MovieFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,7 @@ public class MovieServiceTests {
 	//PageImpl<MovieEntity> representa o Page<MovieDTO> do MovieService
 	private PageImpl<MovieEntity> page;
 	private long existingMovieId;
+	private long nonExistingMovieId;
 
 	//Inicializa as variaveis antes de começar os testes
 	@BeforeEach
@@ -49,6 +51,7 @@ public class MovieServiceTests {
 		movieEntity = MovieFactory.createMovieEntity();
 		page = new PageImpl<>(List.of((movieEntity)));
 		existingMovieId = 1L;
+		nonExistingMovieId = 2L;
 
 		//Mockar os métodos abaixo da classe MovieService
 		//Esse mock é do teste public void findAllShouldReturnPagedMovieDTO()
@@ -56,6 +59,9 @@ public class MovieServiceTests {
 
 		//Esse mock é do teste public void findByIdShouldReturnMovieDTOWhenIdExists()
 		Mockito.lenient().when(repository.findById(existingMovieId)).thenReturn(Optional.of(movieEntity));
+
+		//Esse mock é do teste public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist()
+		Mockito.lenient().when(repository.findById(nonExistingMovieId)).thenReturn(Optional.empty());
 	}
 
 	@Test
@@ -91,6 +97,11 @@ public class MovieServiceTests {
 
 	@Test
 	public void findByIdShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+		//Resultado do método findById do service quando o id não existe
+		Assertions.assertThrows(ResourceNotFoundException.class, ()->{
+			//Verifica o método findById da classe MovieService quando o id não existe
+			service.findById(nonExistingMovieId);
+		});
 	}
 
 	@Test
